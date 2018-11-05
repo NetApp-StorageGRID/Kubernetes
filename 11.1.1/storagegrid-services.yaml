@@ -1,0 +1,35 @@
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: admin-node-service
+spec:
+  type: NodePort
+  ports:
+  - name: gmi-https
+    port: 443
+    # This exposes the Admin Node's web interface
+    # on every K8s node on port 30443
+    # Just direct your browser to https://<k8s-node>:30443
+    nodePort: 30443
+    targetPort: 443
+  selector:
+    app: adm-app
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: storage-service
+spec:
+  type: NodePort
+  ports:
+  - name: s3-sn-012-https
+    port: 18082
+    # This exposes the Storage Nodes' S3 interface
+    # on every K8s node on port 32185
+    # Just direct S3 client to https://<k8s-node>:32182
+    # This automatically load-balances accross all the Storage Nodes
+    nodePort: 32182
+    targetPort: 18082
+  selector:
+    app: sn-app
