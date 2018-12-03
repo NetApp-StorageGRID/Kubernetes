@@ -92,10 +92,11 @@ spec:
     - ReadWriteOnce
   resources:
     requests:
+      # Format as xfs
       storage: 4Ti
   # This line must be updated
   # Use a storageClass from your cloud provider
-  storageClassName: tridentbasic
+  storageClassName: tridentxfs
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -106,10 +107,11 @@ spec:
     - ReadWriteOnce
   resources:
     requests:
+      # Format as xfs
       storage: 4Ti
   # This line must be updated
   # Use a storageClass from your cloud provider
-  storageClassName: tridentbasic
+  storageClassName: tridentxfs
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -120,10 +122,11 @@ spec:
     - ReadWriteOnce
   resources:
     requests:
+      # Format as xfs
       storage: 4Ti
   # This line must be updated
   # Use a storageClass from your cloud provider
-  storageClassName: tridentbasic
+  storageClassName: tridentxfs
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -134,10 +137,11 @@ spec:
     - ReadWriteOnce
   resources:
     requests:
+      # Format as xfs
       storage: 4Ti
   # This line must be updated
   # Use a storageClass from your cloud provider
-  storageClassName: tridentbasic
+  storageClassName: tridentxfs
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -148,10 +152,11 @@ spec:
     - ReadWriteOnce
   resources:
     requests:
+      # Format as xfs
       storage: 4Ti
   # This line must be updated
   # Use a storageClass from your cloud provider
-  storageClassName: tridentbasic
+  storageClassName: tridentxfs
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -162,10 +167,11 @@ spec:
     - ReadWriteOnce
   resources:
     requests:
+      # Format as xfs
       storage: 4Ti
   # This line must be updated
   # Use a storageClass from your cloud provider
-  storageClassName: tridentbasic
+  storageClassName: tridentxfs
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -176,10 +182,11 @@ spec:
     - ReadWriteOnce
   resources:
     requests:
+      # Format as xfs
       storage: 4Ti
   # This line must be updated
   # Use a storageClass from your cloud provider
-  storageClassName: tridentbasic
+  storageClassName: tridentxfs
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -190,10 +197,11 @@ spec:
     - ReadWriteOnce
   resources:
     requests:
+      # Format as xfs
       storage: 4Ti
   # This line must be updated
   # Use a storageClass from your cloud provider
-  storageClassName: tridentbasic
+  storageClassName: tridentxfs
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -204,7 +212,8 @@ spec:
     - ReadWriteOnce
   resources:
     requests:
+      # Format as xfs
       storage: 4Ti
   # This line must be updated
   # Use a storageClass from your cloud provider
-  storageClassName: tridentbasic
+  storageClassName: tridentxfs
