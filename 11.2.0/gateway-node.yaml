@@ -23,7 +23,7 @@ spec:
         # The image must be available on each K8s Worker
         # Either make this image avalable on every K8s worker node
         # Or host the images on a private repository and update this entry accordingly
-        image: storagegrid-11.1.1:API_Gateway
+        image: storagegrid-11.2.0:API_Gateway
         resources:
           limits:
             cpu: 8
@@ -35,7 +35,7 @@ spec:
         - name: s3-gw-https
           containerPort: 8082
         env:
-        - name: HV_ENV
+        - name: SG_CONTAINER_TYPE
           value: Kubernetes
         - name: NODE_NAME
           valueFrom:
@@ -46,7 +46,6 @@ spec:
         volumeMounts:
         - mountPath: "/var/local"
           name: var-local
-        command: ["/usr/bin/initSG.sh"]
   volumeClaimTemplates:
   # These are mapped using the namespace and StatefullSet IDs
   - metadata:
