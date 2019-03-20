@@ -126,6 +126,9 @@ $ kubectl create --namespace storagegrid -f storagegrid-services.yaml
 service "admin-node-servcie" created
 service "storage-service" created
 ```
+Optionally if your K8s service provider has load balancing:
+File: [storagegrid-loadbalanced-services.yaml](11.2.0/storagegrid-loadbalanced-services.yaml)
+
 ### Verify the services started.
 ```
 $ kubectl get --namespace storagegrid service admin-node-servcie storage-service
@@ -134,4 +137,4 @@ admin-node-servcie  10.107.189.111  <nodes>  443:30443/TCP  1m
 storage-service  10.99.231.197  <nodes>  18082:32182/TCP  1m
 ```
 ### Direct your browser to https://\<EXTERNAL-IP\>:30443/
-  Perform a standard StorageGRID install
+Perform a standard StorageGRID install
