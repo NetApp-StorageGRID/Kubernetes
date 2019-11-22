@@ -5,136 +5,124 @@ Sample configuration files for Kubernetes deployments
 [Deploying StorageGRID in a Kubernetes Cluster](https://netapp.io/2019/01/15/deploying-storagegrid-in-a-kubernetes-cluster/)
 
 ### Create a “storagegrid” namespace
-File: [storagegrid-namespace.yaml](11.2.0/storagegrid-namespace.yaml)
+File: [0-storagegrid-namespace.yaml](11.3.0/0-storagegrid-namespace.yaml)
 ```	
-$ kubectl create -f storagegrid-namespace.yaml
+$ kubectl create -f 0-storagegrid-namespace.yaml
 namespace "storagegrid" created
 ```
-### Create Persistent Volume Claims
-This example uses Trident; however, any Kubernetes storage class can be used.
+### Create standard-xfs StorageClass (Example based on GKE)
+File: [1-storageclass-standard-xfs.yaml](11.3.0/1-storageclass-standard-xfs.yaml)
+```
+$ kubectl create -f 1-storageclass-standard-xfs.yaml 
+storageclass.storage.k8s.io/standard-xfs created
 
-Note: Within this file, you must modify storageClassName to suit your Kubernetes system.
-
-File: [trident-persistent-volume-claims.yaml](11.2.0/trident-persistent-volume-claims.yaml)
+$ kubectl get storageclass
+NAME                 PROVISIONER            AGE
+standard (default)   kubernetes.io/gce-pd   17m
+standard-xfs         kubernetes.io/gce-pd   4m32s
 ```
-$ kubectl create --namespace storagegrid -f trident-persistent-volume-claims.yaml
-persistentvolumeclaim  "var-local-dc1-adm-0"  created
-persistentvolumeclaim  "var-local-dc1-sn-0"  created
-persistentvolumeclaim  "var-local-dc1-sn-1"  created
-persistentvolumeclaim  "var-local-dc1-sn-2"  created
-persistentvolumeclaim  "mysql-dc1-adm-0"  created
-persistentvolumeclaim  "audit-dc1-adm-0"  created
-persistentvolumeclaim  "rangedb0-dc1-sn-0"  created
-persistentvolumeclaim  "rangedb1-dc1-sn-0"  created
-persistentvolumeclaim  "rangedb2-dc1-sn-0"  created
-persistentvolumeclaim  "rangedb0-dc1-sn-1"  created
-persistentvolumeclaim  "rangedb1-dc1-sn-1"  created
-persistentvolumeclaim  "rangedb2-dc1-sn-1"  created
-persistentvolumeclaim  "rangedb0-dc1-sn-2"  created
-persistentvolumeclaim  "rangedb1-dc1-sn-2"  created
-persistentvolumeclaim  "rangedb2-dc1-sn-2"  created
+### Deploy the primary Admin Node
+File: [2-primary-admin.yaml](11.3.0/2-primary-admin.yaml)
 ```
-### Wait until all the PVCs are bound before continuing.
-```
-$ kubectl --namespace storagegrid get pvc
-NAME  STATUS  VOLUME  CAPACITY
-audit-dc1-adm-0  Bound  storagegrid-audit-dc1-adm-0-ad3f7  200Gi
-mysql-dc1-adm-0  Bound  storagegrid-mysql-dc1-adm-0-ad364  200Gi
-rangedb0-dc1-sn-0  Bound  storagegrid-rangedb0-dc1-sn-0-ad4a0  4Ti
-rangedb0-dc1-sn-1  Bound  storagegrid-rangedb0-dc1-sn-1-ad67f  4Ti
-rangedb0-dc1-sn-2  Bound  storagegrid-rangedb0-dc1-sn-2-ad85f  4Ti
-rangedb1-dc1-sn-0  Bound  storagegrid-rangedb1-dc1-sn-0-ad53c  4Ti
-rangedb1-dc1-sn-1  Bound  storagegrid-rangedb1-dc1-sn-1-ad720  4Ti
-rangedb1-dc1-sn-2  Bound  storagegrid-rangedb1-dc1-sn-2-ad901  4Ti
-rangedb2-dc1-sn-0  Bound  storagegrid-rangedb2-dc1-sn-0-ad5d1  4Ti
-rangedb2-dc1-sn-1  Bound  storagegrid-rangedb2-dc1-sn-1-ad7ba  4Ti
-rangedb2-dc1-sn-2  Bound  storagegrid-rangedb2-dc1-sn-2-ad98c  4Ti
-var-local-dc1-adm-0  Bound  storagegrid-var-local-dc1-adm-0-ad0b5  100Gi
-var-local-dc1-sn-0  Bound  storagegrid-var-local-dc1-sn-0-ad169  100Gi
-var-local-dc1-sn-1  Bound  storagegrid-var-local-dc1-sn-1-ad207  100Gi
-var-local-dc1-sn-2  Bound  storagegrid-var-local-dc1-sn-2-ad2b6  100Gi
-```
-### Create the headless DNS service
-
-The headless DNS service will allow the use of a DNS name to reference the Admin Node.
-
-File: [pod-dns.yaml](11.2.0/pod-dns.yaml)
-```
-$ kubectl create --namespace storagegrid -f pod-dns.yaml
-service "pod-dns" created
-```
-### Deploy the Admin Node
-File: [admin-node.yaml](11.2.0/admin-node.yaml)
-```
-$ kubectl create --namespace storagegrid -f admin-node.yaml
-statefulset "dc1-adm" created
+$ kubectl create --namespace storagegrid -f 2-primary-admin.yaml
+persistentvolumeclaim/var-local-dc1-adm-0 created
+persistentvolumeclaim/mysql-dc1-adm-0 created
+persistentvolumeclaim/audit-dc1-adm-0 created
+service/pod-dns created
+service/admin-node-service created
+statefulset.apps/dc1-adm created
 ```
 ### Verify the StatefullSet deployed and the pod started.
 ```
-$ kubectl get --namespace storagegrid statefulsets dc1-adm
-NAME  KIND
-dc1-adm  StatefulSet.v1.apps
+$ kubectl get statefulsets dc1-adm --namespace storagegrid
+NAME      READY   AGE
+dc1-adm   0/1     49s
 
-$ kubectl get --namespace storagegrid pod dc1-adm-0
-NAME  READY  STATUS  RESTARTS  AGE
-dc1-adm-0  1/1  Running  0  3m
+$ kubectl get pod dc1-adm-0 --namespace storagegrid
+NAME        READY   STATUS              RESTARTS   AGE
+dc1-adm-0   0/1     ContainerCreating   0          100s
+
+$ kubectl get pod dc1-adm-0 --namespace storagegrid
+NAME        READY   STATUS    RESTARTS   AGE
+dc1-adm-0   1/1     Running   0          2m2s
 ```
 ### Verify the Admin Node is waiting for configuration (last line in this output).
 
 Note: This command only shows the last three lines.
 ```
-$ kubectl logs --namespace storagegrid dc1-adm-0 -tail 3
+$ kubectl logs dc1-adm-0 --tail 3 --namespace storagegrid
 [INSG] Grid Manager has been started.
-[INSG] Please direct your browser to http://10.112.2.100
+[INSG] Please direct your browser to http://10.32.1.3
 [INSG] Waiting for configuration information
 ```
 ### Deploy the Storage Nodes
-File: [storage-node.yaml](11.2.0/storage-node.yaml)
+File: [3-storage.yaml](11.3.0/3-storage.yaml)
 ```
-$ kubectl create --namespace storagegrid -f storage-node.yaml
-statefulset "dc1-sn" created
+$ kubectl create -f 3-storage.yaml --namespace storagegrid
+persistentvolumeclaim/var-local-dc1-sn-0 created
+persistentvolumeclaim/rangedb0-dc1-sn-0 created
+persistentvolumeclaim/rangedb1-dc1-sn-0 created
+persistentvolumeclaim/rangedb2-dc1-sn-0 created
+persistentvolumeclaim/var-local-dc1-sn-1 created
+persistentvolumeclaim/rangedb0-dc1-sn-1 created
+persistentvolumeclaim/rangedb1-dc1-sn-1 created
+persistentvolumeclaim/rangedb2-dc1-sn-1 created
+persistentvolumeclaim/var-local-dc1-sn-2 created
+persistentvolumeclaim/rangedb0-dc1-sn-2 created
+persistentvolumeclaim/rangedb1-dc1-sn-2 created
+persistentvolumeclaim/rangedb2-dc1-sn-2 created
+service/storage-node-service created
+statefulset.apps/dc1-sn created
 ```
 ### Verify the StatefulSet deployed and all the pods started.
 ```
-$ kubectl get --namespace storagegrid statefulsets dc1-sn
-NAME  KIND
-dc1-sn  StatefulSet.v1.apps
+$ kubectl get statefulsets dc1-sn --namespace storagegrid
+NAME     READY   AGE
+dc1-sn   0/3     55s
  
-$ kubectl get --namespace storagegrid pod dc1-sn-0 dc1-sn-1 dc1-sn-2
-NAME  READY  STATUS  RESTARTS  AGE
-dc1-sn-0  1/1  Running  0  2m
-dc1-sn-1  1/1  Running  0  2m
-dc1-sn-2  1/1  Running  0  2m
-```
-### Verify that each Storage Node is waiting for approval (last line in this output – only dc1-sn-0 is shown).
+$ kubectl get pod dc1-sn-0 dc1-sn-1 dc1-sn-2 --namespace storagegrid
+NAME       READY   STATUS              RESTARTS   AGE
+dc1-sn-0   0/1     ContainerCreating   0          90s
+dc1-sn-1   0/1     ContainerCreating   0          90s
+dc1-sn-2   0/1     ContainerCreating   0          90s
 
-Note: This command only shows the last three lines.
+$ kubectl get statefulsets dc1-sn --namespace storagegrid
+NAME     READY   AGE
+dc1-sn   3/3     2m46s
+
+$ kubectl get pod dc1-sn-0 dc1-sn-1 dc1-sn-2 --namespace storagegrid
+NAME       READY   STATUS    RESTARTS   AGE
+dc1-sn-0   1/1     Running   0          2m48s
+dc1-sn-1   1/1     Running   0          2m48s
+dc1-sn-2   1/1     Running   0          2m48s
 ```
-$ kubectl logs --namespace storagegrid dc1-sn-0 -tail 3
+### Verify that each Storage Node is waiting for approval (last line in each output).
+
+Note: These commands only shows the last three lines.
+```
+$ kubectl logs dc1-sn-0 --tail 3 --namespace storagegrid
 [INSG]
 [INSG]
 [INSG] Please approve this node on the Admin Node GMI to proceed...
-```
-### Deploy the Admin Node and Storage Nodes Services
 
-* The Admin Node service will map GMI HTTPS (port 443) from the Admin Node to make it available at port 30443 of each Kubernetes node.
-* The Storage Node service will map S3 protocol (port 18082) from the Storage Nodes to make them available at port 32182 of each Kubernetes node (Kubernetes will manage load-balancing).
+$ kubectl logs dc1-sn-1 --tail 3 --namespace storagegrid
+[INSG]
+[INSG]
+[INSG] Please approve this node on the Admin Node GMI to proceed...
 
-File: [storagegrid-services.yaml](11.2.0/storagegrid-services.yaml)
-```
-$ kubectl create --namespace storagegrid -f storagegrid-services.yaml
-service "admin-node-servcie" created
-service "storage-service" created
-```
-Optionally if your K8s service provider has load balancing:
-File: [storagegrid-loadbalanced-services.yaml](11.2.0/storagegrid-loadbalanced-services.yaml)
+$ kubectl logs dc1-sn-2 --tail 3 --namespace storagegrid
+[INSG]
+[INSG]
+[INSG] Please approve this node on the Admin Node GMI to proceed...
 
+```
 ### Verify the services started.
 ```
-$ kubectl get --namespace storagegrid service admin-node-servcie storage-service
-NAME  CLUSTER-IP  EXTERNAL-IP  PORT(S)  AGE
-admin-node-servcie  10.107.189.111  <nodes>  443:30443/TCP  1m
-storage-service  10.99.231.197  <nodes>  18082:32182/TCP  1m
+$ kubectl get service --namespace storagegrid
+NAME                   TYPE           CLUSTER-IP    EXTERNAL-IP      PORT(S)                                   AGE
+admin-node-service     LoadBalancer   10.0.21.175   34.68.210.219    80:30251/TCP,443:32511/TCP,22:30667/TCP   18m
+pod-dns                ClusterIP      None          <none>           12345/TCP                                 18m
+storage-node-service   LoadBalancer   10.0.23.55    146.148.74.155   18082:30780/TCP                           13m
 ```
-### Direct your browser to https://\<EXTERNAL-IP\>:30443/
+### Direct your browser to https://\<EXTERNAL-IP\> (of the admin-node-service)
 Perform a standard StorageGRID install

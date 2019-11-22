@@ -1,0 +1,227 @@
+# Copyright (c) 2019 NetApp, Inc., All Rights Reserved
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: var-local-dc1-sn-0
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 100Gi
+  # Use a storageClass from your cloud provider
+  storageClassName: standard
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: rangedb0-dc1-sn-0
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 4Ti
+  # Customized storageClass with XFS file system
+  storageClassName: standard-xfs
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: rangedb1-dc1-sn-0
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 4Ti
+  # Customized storageClass with XFS file system
+  storageClassName: standard-xfs
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: rangedb2-dc1-sn-0
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 4Ti
+  # Customized storageClass with XFS file system
+  storageClassName: standard-xfs
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: var-local-dc1-sn-1
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 100Gi
+  # Use a storageClass from your cloud provider
+  storageClassName: standard
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: rangedb0-dc1-sn-1
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 4Ti
+  # Customized storageClass with XFS file system
+  storageClassName: standard-xfs
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: rangedb1-dc1-sn-1
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 4Ti
+  # Customized storageClass with XFS file system
+  storageClassName: standard-xfs
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: rangedb2-dc1-sn-1
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 4Ti
+  # Customized storageClass with XFS file system
+  storageClassName: standard-xfs
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: var-local-dc1-sn-2
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 100Gi
+  # Use a storageClass from your cloud provider
+  storageClassName: standard
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: rangedb0-dc1-sn-2
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 4Ti
+  # Customized storageClass with XFS file system
+  storageClassName: standard-xfs
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: rangedb1-dc1-sn-2
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 4Ti
+  # Customized storageClass with XFS file system
+  storageClassName: standard-xfs
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: rangedb2-dc1-sn-2
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 4Ti
+  # Customized storageClass with XFS file system
+  storageClassName: standard-xfs
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: storage-node-service
+spec:
+  type: LoadBalancer
+  selector:
+    app: sn-app
+  ports:
+  - name: s3-sn-012-https
+    port: 18082
+    targetPort: 18082
+---
+kind: StatefulSet
+apiVersion: apps/v1
+metadata:
+  name: dc1-sn
+spec:
+  serviceName: "pod-dns"
+  replicas: 3
+  podManagementPolicy: "Parallel"
+  updateStrategy:
+    type: OnDelete
+  selector:
+    matchLabels:
+      name: pod-dns
+  template:
+    metadata:
+      labels:
+        app: sn-app
+        name: pod-dns
+    spec:
+      containers:
+      - name: sn-container
+        image: storagegrid-11.3.0:Storage_Node
+        resources:
+          limits:
+            cpu: 8
+            memory: 24Gi
+        securityContext:
+          capabilities:
+            add: [NET_ADMIN, SYS_ADMIN, SYS_TIME, NET_BIND_SERVICE, SETGID, SETUID, DAC_READ_SEARCH, SYS_RESOURCE, SYSLOG, SYS_PTRACE]
+        env:
+        - name: SG_CONTAINER_TYPE
+          value: Kubernetes
+        - name: NODE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: ADMIN_IP
+          value: "dc1-adm-0.pod-dns"
+        volumeMounts:
+        - mountPath: "/var/local"
+          name: var-local
+        - mountPath: "/var/local/rangedb/0"
+          name: rangedb0
+        - mountPath: "/var/local/rangedb/1"
+          name: rangedb1
+        - mountPath: "/var/local/rangedb/2"
+          name: rangedb2
+  volumeClaimTemplates:
+  - metadata:
+      name: var-local
+  - metadata:
+      name: rangedb0
+  - metadata:
+      name: rangedb1
+  - metadata:
+      name: rangedb2
