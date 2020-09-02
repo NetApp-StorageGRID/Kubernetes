@@ -1,8 +1,0 @@
-# Copyright (c) 2019 NetApp, Inc., All Rights Reserved
----
-kind: Namespace
-apiVersion: v1
-metadata:
-  name: storagegrid
-  labels:
-    name: storagegrid
