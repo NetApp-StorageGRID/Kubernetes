@@ -1,0 +1,118 @@
+# Copyright (c) 2019-2020 NetApp, Inc., All Rights Reserved
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: var-local-dc2-adm-0
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 100Gi
+  # Use a storageClass from your cloud provider
+  storageClassName: sg-xfs
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mysql-dc2-adm-0
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 200Gi
+  # Use a storageClass from your cloud provider
+  storageClassName: sg-xfs
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: audit-dc2-adm-0
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 200Gi
+  # Use a storageClass from your cloud provider
+  storageClassName: sg-xfs
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: dc2-admin-node
+spec:
+  type: LoadBalancer
+  selector:
+    app: dc2-adm-app
+  ports:
+  - name: gmi-http
+    port: 80
+    targetPort: 80
+  - name: gmi-https
+    port: 443
+    targetPort: 443
+  # Optional connectivity for administration
+  # - name: gmi-ssh
+  #   port: 22
+  #   targetPort: 22
+---
+kind: StatefulSet
+apiVersion: apps/v1
+metadata:
+  name: dc2-adm
+spec:
+  serviceName: "pod-dns"
+  replicas: 1
+  podManagementPolicy: "Parallel"
+  updateStrategy:
+    type: OnDelete
+  selector:
+    matchLabels:
+      name: pod-dns
+  template:
+    metadata:
+      labels:
+        app: dc2-adm-app
+        name: pod-dns
+    spec:
+      containers:
+      - name: adm-container
+        image: storagegrid-11.4.0:Admin_Node
+        resources:
+          limits:
+            cpu: 8
+            memory: 24Gi
+        ports:
+        - name: gmi-https
+          containerPort: 443
+        securityContext:
+          capabilities:
+            add: [NET_ADMIN, SYS_ADMIN, SYS_TIME, NET_BIND_SERVICE, SETGID, SETUID, DAC_READ_SEARCH, SYS_RESOURCE, SYSLOG, SYS_PTRACE]
+        env:
+        - name: SG_CONTAINER_TYPE
+          value: Kubernetes
+        - name: ADMIN_ROLE
+          value: Non-Primary
+        - name: NODE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: ADMIN_IP
+          value: "dc1-adm-0.pod-dns"
+        volumeMounts:
+        - mountPath: "/var/local"
+          name: var-local
+        - mountPath: "/var/local/mysql_ibdata"
+          name: mysql
+        - mountPath: "/var/local/audit/export"
+          name: audit
+  volumeClaimTemplates:
+  - metadata:
+      name: var-local
+  - metadata:
+      name: mysql
+  - metadata:
+      name: audit
