@@ -5,13 +5,13 @@ Sample configuration files for Kubernetes deployments
 [Deploying StorageGRID in a Kubernetes Cluster](https://netapp.io/2019/01/15/deploying-storagegrid-in-a-kubernetes-cluster/)
 
 ### Create a “storagegrid” namespace
-File: [0-storagegrid-namespace.yaml](11.4.0/0-storagegrid-namespace.yaml)
+File: [0-storagegrid-namespace.yaml](11.5.0/0-storagegrid-namespace.yaml)
 ```	
 $ kubectl create -f 0-storagegrid-namespace.yaml
 namespace "storagegrid" created
 ```
 ### Create standard-xfs StorageClass (Example based on GKE)
-File: [1-gcp-gke-storageclass-sg-xfs.yaml](11.4.0/1-gcp-gke-storageclass-sg-xfs.yaml)
+File: [1-gcp-gke-storageclass-sg-xfs.yaml](11.5.0/1-gcp-gke-storageclass-sg-xfs.yaml)
 ```
 $ kubectl create -f 1-gcp-gke-storageclass-sg-xfs.yaml
 storageclass.storage.k8s.io/sg-xfs created
@@ -22,7 +22,7 @@ standard (default)   kubernetes.io/gce-pd   17m
 sg-xfs               kubernetes.io/gce-pd   4m32s
 ```
 ### Deploy the primary Admin Node
-File: [2-primary-admin.yaml](11.4.0/2-primary-admin.yaml)
+File: [2-primary-admin.yaml](11.5.0/2-primary-admin.yaml)
 ```
 $ kubectl create --namespace storagegrid -f 2-primary-admin.yaml
 persistentvolumeclaim/var-local-dc1-adm-0 created
@@ -47,7 +47,6 @@ NAME        READY   STATUS    RESTARTS   AGE
 dc1-adm-0   1/1     Running   0          2m2s
 ```
 ### Verify the Admin Node is waiting for configuration (last line in this output).
-
 Note: This command only shows the last three lines.
 ```
 $ kubectl logs dc1-adm-0 --tail 3 --namespace storagegrid
@@ -55,8 +54,15 @@ $ kubectl logs dc1-adm-0 --tail 3 --namespace storagegrid
 [INSG] Please direct your browser to http://10.32.1.3
 [INSG] Waiting for configuration information
 ```
+Note: Take note of the primary Admin Node's IP (10.32.1.3 - in this example)
+### Update the ADMIN_IP value in 3-storage.yaml
+```
+        - name: ADMIN_IP
+          value: "10.32.1.3"
+
+```
 ### Deploy the Storage Nodes
-File: [3-storage.yaml](11.4.0/3-storage.yaml)
+File: [3-storage.yaml](11.5.0/3-storage.yaml)
 ```
 $ kubectl create -f 3-storage.yaml --namespace storagegrid
 persistentvolumeclaim/var-local-dc1-sn-0 created
