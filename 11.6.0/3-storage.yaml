@@ -190,7 +190,7 @@ spec:
     spec:
       containers:
       - name: sn-container
-        image: storagegrid-11.5.0:Storage_Node
+        image: storagegrid-11.6.0:Storage_Node
         resources:
           limits:
             cpu: 8
@@ -205,7 +205,7 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: metadata.name
-        - name: ADMIN_IP
+        - name: ADMIN_DNS_NAME
           value: "dc1-adm-0.pod-dns"
         volumeMounts:
         - mountPath: "/var/local"
