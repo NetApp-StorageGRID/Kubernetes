@@ -1,9 +1,9 @@
-# Copyright (c) 2019-2021 NetApp, Inc., All Rights Reserved
+# Copyright (c) 2019-2020 NetApp, Inc., All Rights Reserved
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: var-local-dc1-gw-0
+  name: var-local-dc1-arc-0
 spec:
   accessModes:
     - ReadWriteOnce
@@ -13,23 +13,10 @@ spec:
   # Use a storageClass from your cloud provider
   storageClassName: sg-xfs
 ---
-kind: Service
-apiVersion: v1
-metadata:
-  name: dc1-gateway-node
-spec:
-  type: LoadBalancer
-  selector:
-    app: dc1-gw-app
-  ports:
-  - name: s3-gw-https
-    port: 8082
-    targetPort: 8082
----
 kind: StatefulSet
 apiVersion: apps/v1
 metadata:
-  name: dc1-gw
+  name: dc1-arc
 spec:
   serviceName: "pod-dns"
   replicas: 1
@@ -42,12 +29,12 @@ spec:
   template:
     metadata:
       labels:
-        app: dc1-gw-app
+        app: arc-app
         name: pod-dns
     spec:
       containers:
-      - name: gw-container
-        image: storagegrid-11.6.0:API_Gateway
+      - name: arc-container
+        image: storagegrid-11.7.0:Archive_Node
         resources:
           limits:
             cpu: 8
@@ -55,9 +42,6 @@ spec:
         securityContext:
           capabilities:
             add: [NET_ADMIN, SYS_ADMIN, SYS_TIME, NET_BIND_SERVICE, SETGID, SETUID, DAC_READ_SEARCH, SYS_RESOURCE, SYSLOG, SYS_PTRACE]
-        ports:
-        - name: s3-gw-https
-          containerPort: 8082
         env:
         - name: SG_CONTAINER_TYPE
           value: Kubernetes
@@ -68,18 +52,21 @@ spec:
         - name: ADMIN_DNS_NAME
           value: "dc1-adm-0.pod-dns"
         volumeMounts:
+        - mountPath: "/tmp"
+          name: tmp
         - mountPath: "/var/local"
           name: var-local
-        - mountPath: "/var/local/nginx-gw/spool"
-          name: nginx-gw-spool
+        - mountPath: "/var/local/nginx/spool"
+          name: nginx-spool
       volumes:
-      - name: nginx-gw-spool
+      - name: nginx-spool
         emptyDir:
           medium: Memory
-          # The sizeLimit parameter implemented as Alfa for K8s 1.20 and must be enabled to be useful.
-          # The sizeLimit parameter implemented as Beta for K8s 1.22 enabled by default.
-          # If not enabled the resulting tmpfs mount will consume half the available memory.
-          sizeLimit: 64M
+          sizeLimit: 64Mi
+      - name: tmp
+        emptyDir:
+          medium: Memory
+          sizeLimit: 512Mi
   volumeClaimTemplates:
   - metadata:
       name: var-local

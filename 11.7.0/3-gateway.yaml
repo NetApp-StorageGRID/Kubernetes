@@ -1,9 +1,9 @@
-# Copyright (c) 2019-2020 NetApp, Inc., All Rights Reserved
+# Copyright (c) 2019-2021 NetApp, Inc., All Rights Reserved
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: var-local-dc1-arc-0
+  name: var-local-dc1-gw-0
 spec:
   accessModes:
     - ReadWriteOnce
@@ -13,10 +13,23 @@ spec:
   # Use a storageClass from your cloud provider
   storageClassName: sg-xfs
 ---
+kind: Service
+apiVersion: v1
+metadata:
+  name: dc1-gateway-node
+spec:
+  type: LoadBalancer
+  selector:
+    app: dc1-gw-app
+  ports:
+  - name: s3-gw-https
+    port: 8082
+    targetPort: 8082
+---
 kind: StatefulSet
 apiVersion: apps/v1
 metadata:
-  name: dc1-arc
+  name: dc1-gw
 spec:
   serviceName: "pod-dns"
   replicas: 1
@@ -29,12 +42,12 @@ spec:
   template:
     metadata:
       labels:
-        app: arc-app
+        app: dc1-gw-app
         name: pod-dns
     spec:
       containers:
-      - name: arc-container
-        image: storagegrid-11.6.0:Archive_Node
+      - name: gw-container
+        image: storagegrid-11.7.0:API_Gateway
         resources:
           limits:
             cpu: 8
@@ -42,6 +55,9 @@ spec:
         securityContext:
           capabilities:
             add: [NET_ADMIN, SYS_ADMIN, SYS_TIME, NET_BIND_SERVICE, SETGID, SETUID, DAC_READ_SEARCH, SYS_RESOURCE, SYSLOG, SYS_PTRACE]
+        ports:
+        - name: s3-gw-https
+          containerPort: 8082
         env:
         - name: SG_CONTAINER_TYPE
           value: Kubernetes
@@ -52,8 +68,27 @@ spec:
         - name: ADMIN_DNS_NAME
           value: "dc1-adm-0.pod-dns"
         volumeMounts:
+        - mountPath: "/tmp"
+          name: tmp
         - mountPath: "/var/local"
           name: var-local
+        - mountPath: "/var/local/nginx/spool"
+          name: nginx-spool
+        - mountPath: "/var/local/nginx-gw/spool"
+          name: nginx-gw-spool
+      volumes:
+      - name: nginx-spool
+        emptyDir:
+          medium: Memory
+          sizeLimit: 64Mi
+      - name: nginx-gw-spool
+        emptyDir:
+          medium: Memory
+          sizeLimit: 64Mi
+      - name: tmp
+        emptyDir:
+          medium: Memory
+          sizeLimit: 512Mi
   volumeClaimTemplates:
   - metadata:
       name: var-local

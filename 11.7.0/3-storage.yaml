@@ -190,7 +190,7 @@ spec:
     spec:
       containers:
       - name: sn-container
-        image: storagegrid-11.6.0:Storage_Node
+        image: storagegrid-11.7.0:Storage_Node
         resources:
           limits:
             cpu: 8
@@ -208,6 +208,8 @@ spec:
         - name: ADMIN_DNS_NAME
           value: "dc1-adm-0.pod-dns"
         volumeMounts:
+        - mountPath: "/tmp"
+          name: tmp
         - mountPath: "/var/local"
           name: var-local
         - mountPath: "/var/local/rangedb/0"
@@ -216,6 +218,17 @@ spec:
           name: rangedb1
         - mountPath: "/var/local/rangedb/2"
           name: rangedb2
+        - mountPath: "/var/local/nginx/spool"
+          name: nginx-spool
+      volumes:
+      - name: nginx-spool
+        emptyDir:
+          medium: Memory
+          sizeLimit: 64Mi
+      - name: tmp
+        emptyDir:
+          medium: Memory
+          sizeLimit: 512Mi
   volumeClaimTemplates:
   - metadata:
       name: var-local
