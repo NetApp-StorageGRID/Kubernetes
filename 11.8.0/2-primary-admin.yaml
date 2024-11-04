@@ -3,7 +3,7 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: var-local-dc2-adm-0
+  name: var-local-dc1-adm-0
 spec:
   accessModes:
     - ReadWriteOnce
@@ -16,7 +16,7 @@ spec:
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: mysql-dc2-adm-0
+  name: mysql-dc1-adm-0
 spec:
   accessModes:
     - ReadWriteOnce
@@ -29,7 +29,7 @@ spec:
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: audit-dc2-adm-0
+  name: audit-dc1-adm-0
 spec:
   accessModes:
     - ReadWriteOnce
@@ -42,11 +42,27 @@ spec:
 kind: Service
 apiVersion: v1
 metadata:
-  name: dc2-admin-node
+  name: pod-dns
+  labels:
+    name: pod-dns
+spec:
+  selector:
+    name: pod-dns
+  clusterIP: None
+  ports:
+  # Although unused, headless service definitions require a port to be declared
+  - name: unused
+    port: 12345
+    targetPort: 12345
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: dc1-admin-node
 spec:
   type: LoadBalancer
   selector:
-    app: dc2-adm-app
+    app: dc1-adm-app
   ports:
   - name: gmi-http
     port: 80
@@ -62,7 +78,7 @@ spec:
 kind: StatefulSet
 apiVersion: apps/v1
 metadata:
-  name: dc2-adm
+  name: dc1-adm
 spec:
   serviceName: "pod-dns"
   replicas: 1
@@ -75,14 +91,16 @@ spec:
   template:
     metadata:
       labels:
-        app: dc2-adm-app
+        app: dc1-adm-app
         name: pod-dns
     spec:
       containers:
       - name: adm-container
-        image: storagegrid-11.7.0:Admin_Node
+        image: storagegrid-11.8.0:Admin_Node
         resources:
           limits:
+            memory: 24Gi
+          requests:
             cpu: 8
             memory: 24Gi
         ports:
@@ -95,13 +113,11 @@ spec:
         - name: SG_CONTAINER_TYPE
           value: Kubernetes
         - name: ADMIN_ROLE
-          value: Non-Primary
+          value: Primary
         - name: NODE_NAME
           valueFrom:
             fieldRef:
               fieldPath: metadata.name
-        - name: ADMIN_DNS_NAME
-          value: "dc1-adm-0.pod-dns"
         volumeMounts:
         - mountPath: "/tmp"
           name: tmp

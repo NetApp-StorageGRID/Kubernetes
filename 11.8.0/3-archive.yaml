@@ -34,9 +34,11 @@ spec:
     spec:
       containers:
       - name: arc-container
-        image: storagegrid-11.7.0:Archive_Node
+        image: storagegrid-11.8.0:Archive_Node
         resources:
           limits:
+            memory: 24Gi
+          requests:
             cpu: 8
             memory: 24Gi
         securityContext:
