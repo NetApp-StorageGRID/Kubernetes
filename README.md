@@ -1,8 +1,8 @@
 # Deploying StorageGRID on Kubernetes
 Sample configuration files for Kubernetes deployments
 
-## Read the full article on NetApp's thePub:
-[Deploying StorageGRID in a Kubernetes Cluster](https://netapp.io/2019/01/15/deploying-storagegrid-in-a-kubernetes-cluster/)
+## Read the Wiki Documentation:
+[Deploying StorageGRID in a Kubernetes Cluster](https://github.com/NetApp-StorageGRID/Kubernetes/wiki)
 
 ### Create a “storagegrid” namespace
 File: [0-storagegrid-namespace.yaml](11.9.0/0-storagegrid-namespace.yaml)
