@@ -1,3 +1,4 @@
+# Copyright (c) 2020 NetApp, Inc., All Rights Reserved
 # This example is based on the Amazon Web Services (AWS)
 # Elastic Kubernetes Service (EKS) StorageClass named "gp2"
 apiVersion: storage.k8s.io/v1

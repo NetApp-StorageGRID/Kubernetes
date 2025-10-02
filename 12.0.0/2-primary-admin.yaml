@@ -1,4 +1,4 @@
-# Copyright (c) 2019-2021 NetApp, Inc., All Rights Reserved
+# Copyright (c) 2019 NetApp, Inc., All Rights Reserved
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -96,7 +96,7 @@ spec:
     spec:
       containers:
       - name: adm-container
-        image: storagegrid-11.9.0:Admin_Node
+        image: storagegrid-12.0.0:Admin_Node
         resources:
           limits:
             memory: 24Gi

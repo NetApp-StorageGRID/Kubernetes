@@ -1,9 +1,9 @@
-# Copyright (c) 2019-2021 NetApp, Inc., All Rights Reserved
+# Copyright (c) 2019 NetApp, Inc., All Rights Reserved
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: var-local-dc2-adm-0
+  name: var-local-dc1-gw-0
 spec:
   accessModes:
     - ReadWriteOnce
@@ -13,56 +13,23 @@ spec:
   # Use a storageClass from your cloud provider
   storageClassName: sg-xfs
 ---
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: mysql-dc2-adm-0
-spec:
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 200Gi
-  # Use a storageClass from your cloud provider
-  storageClassName: sg-xfs
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: audit-dc2-adm-0
-spec:
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 200Gi
-  # Use a storageClass from your cloud provider
-  storageClassName: sg-xfs
----
 kind: Service
 apiVersion: v1
 metadata:
-  name: dc2-admin-node
+  name: dc1-gateway-node
 spec:
   type: LoadBalancer
   selector:
-    app: dc2-adm-app
+    app: dc1-gw-app
   ports:
-  - name: gmi-http
-    port: 80
-    targetPort: 80
-  - name: gmi-https
-    port: 443
-    targetPort: 443
-  # Optional connectivity for administration
-  # - name: gmi-ssh
-  #   port: 22
-  #   targetPort: 22
+  - name: s3-gw-https
+    port: 8082
+    targetPort: 8082
 ---
 kind: StatefulSet
 apiVersion: apps/v1
 metadata:
-  name: dc2-adm
+  name: dc1-gw
 spec:
   serviceName: "pod-dns"
   replicas: 1
@@ -75,21 +42,18 @@ spec:
   template:
     metadata:
       labels:
-        app: dc2-adm-app
+        app: dc1-gw-app
         name: pod-dns
     spec:
       containers:
-      - name: adm-container
-        image: storagegrid-11.9.0:Admin_Node
+      - name: gw-container
+        image: storagegrid-12.0.0:API_Gateway
         resources:
           limits:
             memory: 24Gi
           requests:
             cpu: 8
             memory: 24Gi
-        ports:
-        - name: gmi-https
-          containerPort: 443
         securityContext:
           capabilities:
             add:
@@ -115,11 +79,12 @@ spec:
             - SYS_RESOURCE
             - SYSLOG
             - SYS_PTRACE
+        ports:
+        - name: s3-gw-https
+          containerPort: 8082
         env:
         - name: SG_CONTAINER_TYPE
           value: Kubernetes
-        - name: ADMIN_ROLE
-          value: Non-Primary
         - name: NODE_NAME
           valueFrom:
             fieldRef:
@@ -131,10 +96,6 @@ spec:
           name: tmp
         - mountPath: "/var/local"
           name: var-local
-        - mountPath: "/var/local/mysql_ibdata"
-          name: mysql
-        - mountPath: "/var/local/audit/export"
-          name: audit
         - mountPath: "/var/local/nginx/spool"
           name: nginx-spool
         - mountPath: "/var/local/nginx-gw/spool"
@@ -155,7 +116,3 @@ spec:
   volumeClaimTemplates:
   - metadata:
       name: var-local
-  - metadata:
-      name: mysql
-  - metadata:
-      name: audit

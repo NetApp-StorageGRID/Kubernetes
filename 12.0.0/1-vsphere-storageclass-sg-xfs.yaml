@@ -1,0 +1,11 @@
+# Copyright (c) 2025 NetApp, Inc., All Rights Reserved
+---
+kind: StorageClass
+apiVersion: storage.k8s.io/v1
+metadata:
+  name: sg-xfs
+provisioner: csi.vsphere.vmware.com
+parameters:
+  fsType: xfs
+  # Optionally specify storage policy defined in vSphere
+  # storagepolicyname: "K8s-policy"
